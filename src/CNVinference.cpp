@@ -14,6 +14,8 @@ int main(int argc, char* argv[])
 	//model.loadData("NA12878.null.null2.cnv.dat1.txt", "hhall.hg18.null2.pfb", "22");
 	//model.loadReadDepthData("data4hmm_chr17revise.txt");
 	
+	// current codes
+
 	model.mixtureProportion = atof(argv[3]);
 	model.mixtureProportionNormal = atof(argv[4]);
 
