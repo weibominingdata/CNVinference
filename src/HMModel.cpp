@@ -129,6 +129,7 @@ HMModel::HMModel(void)
 , USINGMAPPABILITY(true)
 , USINGAUTOREGRESSION(true)
 , USINGMIXTURECOMPONENT(true)
+, REESTIMATETRANSITION(true)
 {
 }
 
@@ -1022,7 +1023,7 @@ void HMModel::inferAndEstimation(int rounds)
 	for(int i = 0; i < rounds; ++i)
 	{
 		doOneRoundInference();
-		reEstimation();
+		reEstimation(REESTIMATETRANSITION);
 		writeKeyValue(i+1);
 	}
 	findBestPath(false);
@@ -1274,83 +1275,86 @@ void HMModel::writeResult(void)
 
 
 
-void HMModel::reEstimation(bool transition)
+void HMModel::reEstimation(bool transitionReestimate)
 {
-	// update initial probability
-	for(int i = 0; i < nSTATES; ++i)
+	if (transitionReestimate)
 	{
-		pPi[i] = exp(pAlpha[0][i] + pBeta[0][i] - cLikelihood[nITRATION-1]);
-	}
-
-	// update transition probability
-	// first we need to create a temp transition matrix to store new values
-	double **newTran = new double*[nSTATES];
-	for(int i = 0; i < nSTATES; ++i)
-	{
-		newTran[i] = new double[nSTATES];
-		for(int j = 0; j < nSTATES; ++j)
-			newTran[i][j] = 0;
-	}
-	// then we create a temp cjk function
-	double **c = new double *[nSTATES];
-	for(int i = 0; i < nSTATES; ++i)
-	{
-		c[i] = new double[nSTATES];
-		for(int j = 0; j < nSTATES; ++j)
-			c[i][j] = 0;
-	}
-	double *v = new double[nLength-1];
-	for(int j = 0; j < nSTATES; ++j)
-	{
-		for(int k = 0; k < nSTATES; ++k)
+		cout << "transition re-estimated" << endl;
+		// update initial probability
+		for(int i = 0; i < nSTATES; ++i)
 		{
-			for(int i = 1; i < nLength; ++i)
-			{
-				v[i-1] = pAlpha[i-1][j]+log(pEmissTbl[i][k])+pBeta[i][k];
-			}
-			c[j][k] = MathTools::logsumexp(v, nLength-1);
+			pPi[i] = exp(pAlpha[0][i] + pBeta[0][i] - cLikelihood[nITRATION-1]);
 		}
-	}
-	delete []v;
-	v = new double[nSTATES];
-	for(int j = 0; j < nSTATES; ++j)
-	{
-		for(int k = 0; k < nSTATES; ++k)
-		{
-			newTran[j][k] = log(pTranTbl[j][k]);
-			newTran[j][k] += c[j][k];
-			for(int l = 0; l < nSTATES; ++l)
-			{
-				v[l] = log(pTranTbl[j][l])+c[j][l];
-			}
-			double vsum = MathTools::logsumexp(v, nSTATES);
-			newTran[j][k] -= vsum;
-			newTran[j][k] = exp(newTran[j][k]);
-		}
-	}
-	delete []v;
-	// put the new value to Tran Table
-	for(int i = 0; i < nSTATES; ++i)
-	{
-		for(int j = 0; j < nSTATES; ++j)
-			pTranTbl[i][j] = newTran[i][j];
-	}
-	fillTranDiscrete();
-	for(int i = 0; i < nSTATES; ++i)
-	{
-		delete []newTran[i];
-		newTran[i] = NULL;
-	}
-	delete []newTran;
-	newTran = NULL;
-	for(int i = 0; i < nSTATES; ++i)
-	{
-		delete []c[i];
-		c[i] = NULL;
-	}
-	delete []c;
-	c = NULL;
 
+		// update transition probability
+		// first we need to create a temp transition matrix to store new values
+		double **newTran = new double*[nSTATES];
+		for(int i = 0; i < nSTATES; ++i)
+		{
+			newTran[i] = new double[nSTATES];
+			for(int j = 0; j < nSTATES; ++j)
+				newTran[i][j] = 0;
+		}
+		// then we create a temp cjk function
+		double **c = new double *[nSTATES];
+		for(int i = 0; i < nSTATES; ++i)
+		{
+			c[i] = new double[nSTATES];
+			for(int j = 0; j < nSTATES; ++j)
+				c[i][j] = 0;
+		}
+		double *v = new double[nLength-1];
+		for(int j = 0; j < nSTATES; ++j)
+		{
+			for(int k = 0; k < nSTATES; ++k)
+			{
+				for(int i = 1; i < nLength; ++i)
+				{
+					v[i-1] = pAlpha[i-1][j]+log(pEmissTbl[i][k])+pBeta[i][k];
+				}
+				c[j][k] = MathTools::logsumexp(v, nLength-1);
+			}
+		}
+		delete []v;
+		v = new double[nSTATES];
+		for(int j = 0; j < nSTATES; ++j)
+		{
+			for(int k = 0; k < nSTATES; ++k)
+			{
+				newTran[j][k] = log(pTranTbl[j][k]);
+				newTran[j][k] += c[j][k];
+				for(int l = 0; l < nSTATES; ++l)
+				{
+					v[l] = log(pTranTbl[j][l])+c[j][l];
+				}
+				double vsum = MathTools::logsumexp(v, nSTATES);
+				newTran[j][k] -= vsum;
+				newTran[j][k] = exp(newTran[j][k]);
+			}
+		}
+		delete []v;
+		// put the new value to Tran Table
+		for(int i = 0; i < nSTATES; ++i)
+		{
+			for(int j = 0; j < nSTATES; ++j)
+				pTranTbl[i][j] = newTran[i][j];
+		}
+		fillTranDiscrete();
+		for(int i = 0; i < nSTATES; ++i)
+		{
+			delete []newTran[i];
+			newTran[i] = NULL;
+		}
+		delete []newTran;
+		newTran = NULL;
+		for(int i = 0; i < nSTATES; ++i)
+		{
+			delete []c[i];
+			c[i] = NULL;
+		}
+		delete []c;
+		c = NULL;
+	}
 	//calculateMuAndPhi();
 	//calculateMuAndPhiWithAutoRegression(); // calculate with auto regression
 
