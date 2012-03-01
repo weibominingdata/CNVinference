@@ -65,7 +65,6 @@ public:
 	bool USINGMAPPABILITY;
 	bool USINGAUTOREGRESSION;
 	bool USINGMIXTURECOMPONENT;
-	bool REESTIMATETRANSITION;
 
 private:
 	void computAlpha(void);
