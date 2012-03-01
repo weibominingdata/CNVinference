@@ -26,6 +26,11 @@ int main(int argc, char* argv[])
 		if (atoi(argv[7])==0)
 			model.USINGMIXTURECOMPONENT = false;
 	}
+	if (argc > 8)
+	{
+		if (atoi(argv[8])==0)
+			model.REESTIMATETRANSITION = false;
+	}
 
 	model.loadReadDepthData(argv[1]);
 	model.inferAndEstimation(atoi(argv[2]));
