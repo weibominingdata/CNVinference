@@ -71,7 +71,7 @@ private:
 	void computBeta(void);
 	void computLikelihood(void);
 	void computGamma(void);
-	void reEstimation(void);//Baum-Welsh
+	void reEstimation(bool transitionReestimate=true);//Baum-Welsh
 	void findBestPath(bool viterbi=true);//Viterbi Algorithm
 	void printVariable(void);
 	void doOneRoundInference();

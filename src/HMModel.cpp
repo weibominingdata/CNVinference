@@ -1274,7 +1274,7 @@ void HMModel::writeResult(void)
 
 
 
-void HMModel::reEstimation(void)
+void HMModel::reEstimation(bool transition)
 {
 	// update initial probability
 	for(int i = 0; i < nSTATES; ++i)
