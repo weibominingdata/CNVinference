@@ -764,8 +764,10 @@ void HMModel::setReadDepthVariable()
 	//			pTranTbl[i][j] = 0.1/(nSTATES-1);
 	//	}
 	//}
-	double normalSelfTran=0.99995;
+	//double normalSelfTran=0.99995;
+	double normalSelfTran = 0.995;
 	double otherSelfTran=0.95;
+	cout << normalSelfTran << " " << otherSelfTran << endl;
 	for(int i = 0; i < nSTATES; ++i)
 	{
 		for(int j = 0; j < nSTATES; ++j)
