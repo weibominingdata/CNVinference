@@ -3,6 +3,8 @@
 
 #include "HMModel.h"
 #include "stdlib.h"
+#include "iostream"
+using namespace std;
 
 
 int main(int argc, char* argv[])
@@ -16,6 +18,8 @@ int main(int argc, char* argv[])
 	
 	// current codes
 
+	cout << atoi(argv[2]) << " " << atof(argv[3]) << " " << atof(argv[4]) << " ";
+
 	model.mixtureProportion = atof(argv[3]);
 	model.mixtureProportionNormal = atof(argv[4]);
 
@@ -27,12 +31,17 @@ int main(int argc, char* argv[])
 			model.USINGAUTOREGRESSION = false;
 		if (atoi(argv[7])==0)
 			model.USINGMIXTURECOMPONENT = false;
+		cout << atoi(argv[5]) << " " << atoi(argv[6]) << " " << atoi(argv[7]) << " ";
 	}
 	if (argc > 8)
 	{
 		if (atoi(argv[8])==0)
 			model.REESTIMATETRANSITION = false;
+		cout << atoi(argv[8]) << " ";
+		if (atoi(argv[9]) == 0)
+			model.REESTIMATEINIT = false;
 	}
+	cout << endl;
 
 	model.loadReadDepthData(argv[1]);
 	model.inferAndEstimation(atoi(argv[2]));

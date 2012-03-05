@@ -130,6 +130,7 @@ HMModel::HMModel(void)
 , USINGAUTOREGRESSION(true)
 , USINGMIXTURECOMPONENT(true)
 , REESTIMATETRANSITION(true)
+, REESTIMATEINIT(true)
 {
 }
 
@@ -182,6 +183,13 @@ void HMModel::startFromCoefficient()
     double newintercept = log(medianReadCount)-log(normalStates)-medianLogmap-coefficientforgc*medianHgc;
     cout << newintercept << endl;
 
+/*	double coverageDifference = medianReadCount/220;
+	double intercept = 4.7;
+	double newintercept = intercept+log(coverageDifference);
+	double delta = 0.5;
+	double coefficientforgc = 1.0;
+	cout << coverageDifference << " " << newintercept << endl;
+*/
 	for(int i = 0; i < nSTATES; ++i)
 	{
 		phi[i] = 1.0;
@@ -756,6 +764,8 @@ void HMModel::setReadDepthVariable()
 	//			pTranTbl[i][j] = 0.1/(nSTATES-1);
 	//	}
 	//}
+	double normalSelfTran=0.99995;
+	double otherSelfTran=0.95;
 	for(int i = 0; i < nSTATES; ++i)
 	{
 		for(int j = 0; j < nSTATES; ++j)
@@ -763,20 +773,20 @@ void HMModel::setReadDepthVariable()
 			if (i==j)
 			{
 				if (i==normalStates)
-					pTranTbl[i][j] = 0.99995;
+					pTranTbl[i][j] = normalSelfTran;
 				else
-					pTranTbl[i][j] = 0.95;
+					pTranTbl[i][j] = otherSelfTran;
 			}
 			else
 			{
 				if (j==normalStates)
-					pTranTbl[i][j] = 0.05*3/(nSTATES+1);
+					pTranTbl[i][j] = (1-otherSelfTran)*3/(nSTATES+1);
 				else
 				{
 					if (i==normalStates)
-						pTranTbl[i][j] = 0.00005/(nSTATES-1);
+						pTranTbl[i][j] = (1-normalSelfTran)/(nSTATES-1);
 					else
-						pTranTbl[i][j] = 0.05/(nSTATES+1);
+						pTranTbl[i][j] = (1-otherSelfTran)/(nSTATES+1);
 				}
 			}
 		}
@@ -1023,7 +1033,7 @@ void HMModel::inferAndEstimation(int rounds)
 	for(int i = 0; i < rounds; ++i)
 	{
 		doOneRoundInference();
-		reEstimation(REESTIMATETRANSITION);
+		reEstimation(REESTIMATETRANSITION, REESTIMATEINIT);
 		writeKeyValue(i+1);
 	}
 	findBestPath(false);
@@ -1275,17 +1285,21 @@ void HMModel::writeResult(void)
 
 
 
-void HMModel::reEstimation(bool transitionReestimate)
+void HMModel::reEstimation(bool transitionReestimate, bool initReestimation)
 {
-	if (transitionReestimate)
-	{
-		cout << "transition re-estimated" << endl;
+    if (initReestimation)
+    {
+		cout << "initial probability re-estimated" << endl;
 		// update initial probability
 		for(int i = 0; i < nSTATES; ++i)
 		{
 			pPi[i] = exp(pAlpha[0][i] + pBeta[0][i] - cLikelihood[nITRATION-1]);
 		}
+    }
 
+	if (transitionReestimate)
+	{
+		cout << "transition re-estimated" << endl;
 		// update transition probability
 		// first we need to create a temp transition matrix to store new values
 		double **newTran = new double*[nSTATES];

@@ -66,13 +66,14 @@ public:
 	bool USINGAUTOREGRESSION;
 	bool USINGMIXTURECOMPONENT;
 	bool REESTIMATETRANSITION;
+	bool REESTIMATEINIT;
 
 private:
 	void computAlpha(void);
 	void computBeta(void);
 	void computLikelihood(void);
 	void computGamma(void);
-	void reEstimation(bool transitionReestimate=true);//Baum-Welsh
+	void reEstimation(bool transitionReestimate=true, bool initReestimation=true);//Baum-Welsh
 	void findBestPath(bool viterbi=true);//Viterbi Algorithm
 	void printVariable(void);
 	void doOneRoundInference();
