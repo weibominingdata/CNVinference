@@ -99,6 +99,8 @@ private:
 	double medianReadCount;    // median of read count
 	double medianLogmap;
 	double medianHgc;
+	double normalSelfTran;
+	double otherSelfTran;
 	std::vector<double> median;
 
 
@@ -110,6 +112,7 @@ private:
 	void fillEmissionTbl(void);
 	void fillTranContinous(void); 
 	void fillTranDiscrete(void);
+	void setTranInitValue(double **pTranTbl);
 	double lamda;   // state duration parameter. assume now it is not state specific
 
 

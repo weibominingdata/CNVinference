@@ -126,6 +126,8 @@ HMModel::HMModel(void)
 , mixtureProportion(0.1)
 , mixtureProportionNormal(0.1)
 , normalStates(2)
+, normalSelfTran(0.995)
+, otherSelfTran(0.95)
 , USINGMAPPABILITY(true)
 , USINGAUTOREGRESSION(true)
 , USINGMIXTURECOMPONENT(true)
@@ -710,6 +712,116 @@ void HMModel::calculateMuAndPhiWithAutoRegressionAllStatesCombined()
 	delete []prior; prior=NULL;
 }
 
+void HMModel::setTranInitValue(double **pTran)
+{
+	// rules
+	// self-transition > transition to other states
+	// self-transition normal > self-transition other states
+	// transition to normal > transition to other
+	// transition to similar state > transition to other states
+	// added up to 1
+	// detail design:
+	// state normal transit to del = state normal transit to dup
+	// state del transit to normal = 2 state transit to del = 4 state transit to dup
+	// state dup transit to normal = 2 state transit to dup = 4 state transit to del
+	int nDel = normalStates-0+1-1;
+	cout << "#del states = " << nDel << endl;
+	int nDup = nSTATES-normalStates-1;
+	cout << "#dup states = " << nDup << endl;
+	double toNormal=4, toSame=2, toDiff=1;
+	double total= toNormal+toSame+toDiff;
+	for(int i = 0; i < nSTATES; ++i)
+	{
+		for(int j = 0; j < nSTATES; ++j)
+		{
+			if (i==j)
+			{
+				if (i==normalStates)
+					pTran[i][j] = normalSelfTran;
+				else
+					pTran[i][j] = otherSelfTran;
+			}
+			else
+			{
+				if (i==normalStates)
+				{
+					double p = 1-normalSelfTran;
+					if (j<normalStates)
+					{
+						p = p/2;
+						pTran[i][j] = p/nDel;
+					}
+					else
+					{
+						p = p/2;
+						pTran[i][j] = p/nDup;
+					}
+				}
+				else if (i<normalStates)
+				{
+					double p = 1-otherSelfTran;
+					if (j < normalStates)
+					{
+						p = p*(toSame)/total;
+						pTran[i][j]=p/(nDel-1);
+					}
+					else if (j == normalStates)
+					{
+						p = p*(toNormal)/total;
+						pTran[i][j] = p;
+					}
+					else
+					{
+						p = p*(toDiff)/total;
+						pTran[i][j] = p/(nDup);
+					}
+				}
+				else
+				{
+					double p = 1-otherSelfTran;
+					if (j < normalStates)
+					{
+						p = p*(toDiff)/total;
+						pTran[i][j]=p/(nDel);
+					}
+					else if (j == normalStates)
+					{
+						p = p*(toNormal)/total;
+						pTran[i][j] = p;
+					}
+					else
+					{
+						p = p*(toSame)/total;
+						pTran[i][j] = p/(nDup-1);
+					}
+				}
+
+			}
+			/*			if (i==j)
+			{
+				if (i==normalStates)
+					pTran[i][j] = normalSelfTran;
+				else
+					pTran[i][j] = otherSelfTran;
+			}
+			else
+			{
+				if (j==normalStates)
+					pTran[i][j] = (1-otherSelfTran)*3/(nSTATES+1);
+				else
+				{
+					if (i==normalStates)
+						pTran[i][j] = (1-normalSelfTran)/(nSTATES-1);
+					else
+						pTran[i][j] = (1-otherSelfTran)/(nSTATES+1);
+				}
+			}
+*/		}
+	}
+}
+
+
+
 void HMModel::setReadDepthVariable()
 {
 	// hard coding for the real human data
@@ -765,10 +877,11 @@ void HMModel::setReadDepthVariable()
 	//	}
 	//}
 	//double normalSelfTran=0.99995;
-	double normalSelfTran = 0.995;
-	double otherSelfTran=0.95;
+	//double normalSelfTran = 0.995;
+	//double otherSelfTran=0.95;
 	cout << normalSelfTran << " " << otherSelfTran << endl;
-	for(int i = 0; i < nSTATES; ++i)
+	setTranInitValue(pTranTbl);
+/*	for(int i = 0; i < nSTATES; ++i)
 	{
 		for(int j = 0; j < nSTATES; ++j)
 		{
@@ -793,7 +906,7 @@ void HMModel::setReadDepthVariable()
 			}
 		}
 	}
-
+*/
 
 
 
@@ -808,9 +921,9 @@ void HMModel::setReadDepthVariable()
 	pPi = new double[nSTATES];
 	for(int i = 0; i < nSTATES; ++i)
 	{
-		pPi[i] = 0.005/(nSTATES-1);
+		pPi[i] = (1-normalSelfTran)/(nSTATES-1);
 	}
-	pPi[normalStates] = 0.995;
+	pPi[normalStates] = normalSelfTran;
 
 	pAlpha = new double*[nLength];
 	for(int i = 0; i < nLength; ++i)
