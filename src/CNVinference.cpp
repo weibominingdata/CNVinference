@@ -27,30 +27,24 @@ int main(int argc, char* argv[])
 	{
 		if (atoi(argv[5])==0)
 			model.USINGMAPPABILITY = false;
-        else
-            cout << "using mapability; ";
 		if (atoi(argv[6])==0)
 			model.USINGAUTOREGRESSION = false;
-        else
-            cout << "using autoregression; ";
 		if (atoi(argv[7])==0)
 			model.USINGMIXTURECOMPONENT = false;
-        else
-            cout << "using mixture component; ";
 		//cout << atoi(argv[5]) << " " << atoi(argv[6]) << " " << atoi(argv[7]) << " ";
 	}
 	if (argc > 8)
 	{
 		if (atoi(argv[8])==0)
 			model.REESTIMATETRANSITION = false;
-        else
-            cout << "re-estimate transition probability; ";
-		//cout << atoi(argv[8]) << " ";
-		if (atoi(argv[9]) == 0)
+ 		if (atoi(argv[9]) == 0)
 			model.REESTIMATEINIT = false;
-        else
-            cout << "re-estimate initial probability; ";
-	}
+ 	}
+
+   cout << "using mapability; " << model.USINGMAPPABILITY << " using autoregression; " << model.USINGAUTOREGRESSION << " using mixture component; " << model.USINGMIXTURECOMPONENT
+        << " re-estimate transition probability; " << model.REESTIMATETRANSITION << "re-estimate initial probability;  " << model.REESTIMATEINIT;
+
+
 	cout << endl;
 
 	model.loadReadDepthData(argv[1]);

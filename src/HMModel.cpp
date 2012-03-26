@@ -714,6 +714,26 @@ void HMModel::calculateMuAndPhiWithAutoRegressionAllStatesCombined()
 
 void HMModel::setTranInitValue(double **pTran)
 {
+	// load from the file, called transition_init.dat
+	string tran_init="transition_init.dat";
+	tran_init = path + tran_init;
+    ifstream fin(tran_init.c_str());
+    string comment;
+    getline(fin, comment);
+    while (comment.find("#ENDComments")!=0)
+    {
+    	getline(fin, comment);
+    }
+    for(int i = 0 ; i < nSTATES; ++i)
+    {
+    	for(int j = 0; j < nSTATES; ++j)
+    	{
+    		fin >> pTran[i][j];
+    	}
+    }
+    fin.close();
+
+
 	// rules
 	// self-transition > transition to other states
 	// self-transition normal > self-transition other states
@@ -724,7 +744,7 @@ void HMModel::setTranInitValue(double **pTran)
 	// state normal transit to del = state normal transit to dup
 	// state del transit to normal = 2 state transit to del = 4 state transit to dup
 	// state dup transit to normal = 2 state transit to dup = 4 state transit to del
-	int nDel = normalStates-0+1-1;
+/*	int nDel = normalStates-0+1-1;
 	cout << "#del states = " << nDel << endl;
 	int nDup = nSTATES-normalStates-1;
 	cout << "#dup states = " << nDup << endl;
@@ -797,7 +817,7 @@ void HMModel::setTranInitValue(double **pTran)
 				}
 
 			}
-			/*			if (i==j)
+						if (i==j)
 			{
 				if (i==normalStates)
 					pTran[i][j] = normalSelfTran;
@@ -816,8 +836,9 @@ void HMModel::setTranInitValue(double **pTran)
 						pTran[i][j] = (1-otherSelfTran)/(nSTATES+1);
 				}
 			}
-*/		}
 	}
+	}
+*/
 }
 
 
@@ -1302,8 +1323,8 @@ void HMModel::writeResult(void)
 	fileName += string(snpdataname).substr(sPos,string(snpdataname).length());
 	sPos =(string(infodataname).find_last_of("/")==string::npos)?0:string(infodataname).find_last_of("/")+1;
 	fileName += string(infodataname).substr(sPos,string(infodataname).length());
-	string snpName = "Jingerbread_"+fileName+"_SNP.dat";
-	string segName = "Jingerbread_"+fileName+"_segment.dat";
+	string snpName = path + "Jingerbread_"+fileName+"_SNP.dat";
+	string segName = path + "Jingerbread_"+fileName+"_segment.dat";
 	ofstream out(snpName.c_str());
 	//ofstream out("JSNP.dat");
 	ofstream out1(segName.c_str());
@@ -1634,6 +1655,14 @@ void HMModel::setFileName(char * sn, char * in)
 {
 	snpdataname = sn;
 	infodataname = in;
+
+	int sPos =(string(snpdataname).find_last_of("/")==string::npos)?0:string(snpdataname).find_last_of("/")+1;
+    path = "";
+    if (sPos==0)
+    	path="./";
+    else
+    	path=string(snpdataname).substr(0,sPos);
+
 }
 
 void HMModel::printVariable(void)
@@ -1942,6 +1971,7 @@ void HMModel::writeKeyValue(int index)
 	// alpha,beta,gamma,transition,emission
 	string filename("alpha");
 	filename += postfix;
+	filename = path+filename;
 	ofstream fout(filename.c_str());
 	fout.precision(14);
 	for(int i = 0; i < nLength; ++i)
@@ -1954,6 +1984,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "beta";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int i = 0; i < nLength; ++i)
 	{
@@ -1965,6 +1996,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "gamma";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int i = 0; i < nLength; ++i)
 	{
@@ -1981,6 +2013,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "transition";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int i = 0; i < nSTATES; ++i)
 	{
@@ -1992,6 +2025,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "emission";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int i = 0; i < nLength; ++i)
 	{
@@ -2003,6 +2037,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "mu";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int i = 0; i < nLength; ++i)
 	{
@@ -2014,6 +2049,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "phi";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int j = 0; j < nSTATES; ++j)
 		fout << phi[j] << " ";
@@ -2021,6 +2057,7 @@ void HMModel::writeKeyValue(int index)
 
 	filename = "init";
 	filename += postfix;
+	filename = path+filename;
 	fout.open(filename.c_str());
 	for(int j = 0; j < nSTATES; ++j)
 		fout << pPi[j] << " ";

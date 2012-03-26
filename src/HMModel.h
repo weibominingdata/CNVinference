@@ -130,6 +130,7 @@ public:
 
 	char * snpdataname;
 	char * infodataname;
+	std::string path;
 	//void setVariables(void);
 	double ***pKexi;
 	double **pGa;
